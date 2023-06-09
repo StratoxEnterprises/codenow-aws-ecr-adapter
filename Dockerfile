@@ -1,4 +1,17 @@
-FROM openjdk:11.0.3-jre-slim-stretch
-COPY target/libs/*.jar app.jar
-EXPOSE 80
-CMD java -Xmx128m -Xms128m -XX:MaxMetaspaceSize=128m -Dlogback.configurationFile=logback-codenow.xml -Dconfig.file=/codenow/config/startup-message.txt -jar app.jar
+FROM golang:1.19 AS build
+
+WORKDIR /build/
+COPY . /build/
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./aws-ecr-adpater ./cmd/
+
+FROM hashicorp/terraform:1.4
+
+WORKDIR /
+
+COPY --from=build /build/aws-ecr-adpater .
+COPY configs/ /tmp/configs/
+COPY terraform/ /tmp/terraform/
+
+ENTRYPOINT ["/aws-ecr-adpater"]
+CMD ["-c", "/tmp/configs/static/main.yaml", "streams", "/tmp/configs/custom/*.yaml"]

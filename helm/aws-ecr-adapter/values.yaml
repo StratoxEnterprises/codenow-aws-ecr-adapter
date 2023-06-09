@@ -5,8 +5,8 @@ replicaCount: 1
 configHash: "1" # configuration change detection
 codenow:
   instance: ""
-  applicationName: ""
-  applicationRuntimeName: ""
+  applicationName: "code-now-container-registry"
+  applicationRuntimeName: "code-now-container-registry"
   applicationVersion: ""
   componentRuntimeName: "aws-ecr-adapter"
   componentName: "aws-ecr-adapter"
@@ -20,15 +20,11 @@ environmentVariables: {}
 buildNumber: "${env.BUILD_NUMBER}"
 
 image:
-  pullPolicy: IfNotPresent
+  repository: codenow-stxcn-docker.jfrog.io/codenow/aws-ecr-adapter
+  pullPolicy: Always
 
-service:
-  type: ClusterIP
-  port: 80
-  externalEndpointEnabled: true
 
 configFiles: {}
-environmentVariables: {}
 
 fluentbit:
   istioProxy:
@@ -46,3 +42,18 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+nats:
+  serverHost: "cn-nats.cn-nats-system"
+  skipCertVerify: true
+  nkey: ""
+s3:
+  host:  "https://s3.eu-central-1.wasabisys.com"
+  accessKeyId: ""
+  secretAccessKey: ""
+
+inventoryProvisionerServiceHost: "http://inventory-provisioner.dev:8080"
+accountConfigServiceHost: "http://account.dev"
+
+
+
