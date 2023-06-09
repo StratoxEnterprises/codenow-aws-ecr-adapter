@@ -1,0 +1,12 @@
+http:
+  enabled: true
+  debug_endpoints: false
+
+metrics:
+  mapping: 'root = "cn_aws_ecr_adapter_" + this'
+  prometheus: {}
+
+logger:
+  level: ${LOGGER_LEVEL:DEBUG}
+  static_fields:
+    '@service': cn-aws-ecr-adapter
