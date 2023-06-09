@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.codenow.componentRuntimeName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.codenow.componentRuntimeName }}
+    app.kubernetes.io/name: {{ .Values.codenow.componentRuntimeName }}
+    buildNumber: "{{ .Values.buildNumber }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.codenow.componentRuntimeName }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.fluentbit.istioProxy.enabled }}
+        fluentbit.io/parser-istio-proxy: {{ .Values.fluentbit.istioProxy.parser }}
+        {{- end }}
+        fluentbit.io/parser-{{ .Values.codenow.componentRuntimeName }}: {{ .Values.fluentbit.parser }}
+        configHash: "{{ .Values.configHash }}"
+      labels:
+        app: {{ .Values.codenow.componentRuntimeName }}
+        app.kubernetes.io/name: {{ .Values.codenow.componentRuntimeName }}
+        app.kubernetes.io/instance: {{ .Values.codenow.instance }}
+        app.kubernetes.io/version: {{ .Values.codenow.componentVersion }}
+        app.kubernetes.io/component: {{ .Values.codenow.templateId }}
+        app.kubernetes.io/part-of: {{ .Values.codenow.applicationRuntimeName }}
+        app.kubernetes.io/package-version: {{ .Values.codenow.applicationVersion }}
+    spec:
+      imagePullSecrets:
+        - name: docker-user-registry
+      volumes:
+        - name: nats-nkey
+          secret:
+            secretName: {{ .Values.codenow.componentRuntimeName }}
+      containers:
+        - name: {{ .Values.codenow.componentRuntimeName }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NATS_SERVER_HOST
+              value: "cn-nats.cn-nats-system"
+            - name: NATS_TLS_SKIP_CERT_VERIFY
+              value: "true"
+            - name: NATS_AUTH_NKEY_FILE
+              value: "/tmp/secrets/nats_nkey"
+            - name: ACCOUNT_CONFIG_SERVICE_HOST
+              value: "http://localhost:1080"
+            - name: INVENTORY_PROVISIONER_SERVICE_HOST
+              value: "http://inventory-provisioner.dev:8080"
+            - name: ACCOUNT_CONFIG_SERVICE_HOST
+              value: "http://account.dev"
+            - name: TRF_STATE_AWS_S3_URL
+              value: "https://s3.eu-central-1.wasabisys.com"
+            - name: AWS_S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.codenow.componentRuntimeName }}"
+                  key: aws_s3_access_key_id
+            - name: AWS_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.codenow.componentRuntimeName }}"
+                  key: aws_s3_secret_access_key
+          volumeMounts:
+            - mountPath: "/tmp/secrets"
+              name: nats-nkey
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 4195
+            initialDelaySeconds: 70
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 4195
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 10
+            failureThreshold: 12
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

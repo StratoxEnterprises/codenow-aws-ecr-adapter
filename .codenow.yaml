@@ -1,0 +1,19 @@
+build:
+  pipelines:
+    triggers: []
+    preview:
+      pipeline: java-gradle-app-preview
+    release:
+      pipeline: java-gradle-app-release
+  image: gradle:jdk11
+  environmentVariables: []
+advancedMode:
+  enabled: true
+runtime:
+  image: openjdk:11.0.3-jre-slim-stretch
+  port: "80"
+  endpoints:
+    external:
+      enabled: true
+  java:
+    jvmParameters: -Xmx128m -Xms128m -XX:MaxMetaspaceSize=128m

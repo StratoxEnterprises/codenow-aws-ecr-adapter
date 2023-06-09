@@ -1,0 +1,46 @@
+version: '3.1'
+
+services:
+  nats:
+    image: nats:2.9.1-alpine
+    expose:
+      - "4222"
+    ports:
+      - "8222:8222"
+      - "4222:4222"
+    hostname: nats-server
+    volumes:
+      - type: bind
+        source: ./dev/nats/nats-server.conf
+        target: /etc/nats/nats-server.conf
+
+  mock-server:
+    image: mockserver/mockserver
+    expose:
+      - "1080"
+    ports:
+      - "1080:1080"
+    hostname: mock-server
+    environment:
+      MOCKSERVER_INITIALIZATION_JSON_PATH: /config/initializerJson.json
+    volumes:
+      - type: bind
+        source: ./dev/mock
+        target: /config
+
+  aws-ecr-adapter:
+    image: aws-ecr-adapter
+    hostname: aws-ecr-adapter
+    environment:
+      NATS_SERVER_HOST: "host.docker.internal"
+      NATS_TLS_SKIP_CERT_VERIFY: "true"
+      ACCOUNT_CONFIG_SERVICE_HOST: "http://host.docker.internal:1080"
+      INVENTORY_PROVISIONER_SERVICE_HOST: "https://inventory-provisioner-dev.stxcn.codenow.com"
+      TRF_STATE_AWS_S3_URL: "https://s3.eu-central-1.wasabisys.com"
+      AWS_S3_ACCESS_KEY_ID: ""
+      AWS_S3_SECRET_ACCESS_KEY: ""
+    volumes:
+      - type: bind
+        source: ./dev/nats/nats_nkey
+        target: /tmp/secrets/nats_nkey
+
