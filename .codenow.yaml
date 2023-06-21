@@ -12,10 +12,15 @@ build:
     preview:
       pipeline: docker-app-preview
     triggers: []
+  image: gradle:jdk17
 runtime:
   endpoints:
     external:
       # Expose service to external endpoint
       enabled: true
+  image: openjdk:11.0.3-jre-slim-stretch
+  port: "80"
+  java:
+    jvmParameters: -Xmx128m -Xms128m -XX:MaxMetaspaceSize=128m
 advancedMode:
   enabled: true
