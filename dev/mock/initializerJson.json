@@ -1,0 +1,22 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/account/.*"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n  \"accountId\" : \"test\",\n  \"customContainerRepository\" : [ ],\n  \"containerRegistry\" : {\n    \"type\" : \"ECR\",\n    \"repositoryManagement\" : {\n      \"enabled\" : true\n    }\n  }\n}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/inventory/.+/container-repository-registry"
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "aws_provider_client_id     = \"xxxxxxxx\"\naws_provider_client_secret = \"xxxxxxxxx\"\n\ncustomer_name    = \"test\"\nenvironment_name = \"default\"\nenvironment_type = \"box\"\n\ndns_root_domain       = \"codenow.com\"\ndns_provider_api_user = \"support@stratox.cz\"\ndns_provider_api_key  = \"33e8ba444c6e61be964f67791fdc0501cf304\"\n\nargocd_admin_password = \"okQr9ibYD0gNFh7VaBOW1KSc5\"\n\nprovider_region             = \"us-west-2\"\nprovider_worker_nodes_count = \"3\"\nprovider_worker_node_type   = \"g4dn.2xlarge\"\n\nprovider_worker_system_nodes_count = \"3\"\nprovider_worker_system_node_type   = \"t3.2xlarge\"\n\nprovider_k8s_version = \"1.21\"\n\nargocd_ha = true\n\nargocd_repo_server_limits_cpu    = \"3\"\nargocd_repo_server_limits_memory = \"6000Mi\"\n\nargocd_server_limits_cpu    = \"1000m\"\nargocd_server_limits_memory = \"1000Mi\"\n\nargocd_redis_ha_limits_cpu = \"300m\"\n\nargocd_application_controller_replicas = \"2\"\n\ncontainer_registry_enabled      = true\ncontainer_registry_repositories = [\n    \"codenow/rest-repo1\",\n    \"codenow/rest-repo2\",\n    \"codenow/rest-repo3\",\n]\n\ncontainer_registry_allowed_read_principals = [\"arn:aws:iam::415255136294:root\"]\n"
+    }
+  }
+]

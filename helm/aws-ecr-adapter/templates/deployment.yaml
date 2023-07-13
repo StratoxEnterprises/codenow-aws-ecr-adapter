@@ -19,9 +19,6 @@ spec:
         fluentbit.io/parser-istio-proxy: {{ .Values.fluentbit.istioProxy.parser }}
         {{- end }}
         fluentbit.io/parser-{{ .Values.codenow.componentRuntimeName }}: {{ .Values.fluentbit.parser }}
-        prometheus.io/path: /prometheus
-        prometheus.io/port: "{{ .Values.service.port }}"
-        prometheus.io/scrape: "{{ .Values.metricsPrometheusEnabled }}"
         configHash: "{{ .Values.configHash }}"
       labels:
         app: {{ .Values.codenow.componentRuntimeName }}
@@ -35,44 +32,44 @@ spec:
       imagePullSecrets:
         - name: docker-user-registry
       volumes:
-        {{- $configMapName := .Values.codenow.componentRuntimeName -}}
-        {{ range $key, $val := .Values.configFiles }}
-        - name: {{ $key | replace "." "-" | lower | trimPrefix "-" }}
-          configMap:
-            name: {{ $configMapName }}
-            items:
-            - key: {{ $key }}
-              path: {{ $key }}
-        {{- end }}
+        - name: nats-nkey
+          secret:
+            secretName: {{ .Values.codenow.componentRuntimeName }}
       containers:
         - name: {{ .Values.codenow.componentRuntimeName }}
           image: "{{ .Values.image.repository }}:{{ .Chart.Version }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: SERVER_PORT
-              value: '{{ .Values.service.port }}'
-            {{- $cnSecretName := .Values.codenow.componentRuntimeName -}}
-            {{- range $key, $val := .Values.environmentVariables }}
-            - name: {{ $key }}
+            - name: NATS_SERVER_HOST
+              value: "{{ .Values.nats.serverHost }}"
+            - name: NATS_TLS_SKIP_CERT_VERIFY
+              value: "{{ .Values.nats.skipCertVerify }}"
+            - name: NATS_AUTH_NKEY_FILE
+              value: "/tmp/secrets/nats_nkey"
+            - name: INVENTORY_PROVISIONER_SERVICE_HOST
+              value: "{{ .Values.inventoryProvisionerServiceHost }}"
+            - name: ACCOUNT_CONFIG_SERVICE_HOST
+              value: "{{ .Values.accountConfigServiceHost }}"
+            - name: TRF_STATE_AWS_S3_URL
+              value: "{{ .Values.s3.host }}"
+            - name: AWS_S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                  name: {{ $cnSecretName }}
-                  key: {{ $key }}
-            {{- end }}
+                  name: "{{ .Values.codenow.componentRuntimeName }}"
+                  key: aws_s3_access_key_id
+            - name: AWS_S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.codenow.componentRuntimeName }}"
+                  key: aws_s3_secret_access_key
           volumeMounts:
-            {{- range $key, $val := .Values.configFiles }}
-            - name: {{ $key | replace "." "-" | lower | trimPrefix "-" }}
-              mountPath: /codenow/config/{{ $key }}
-              subPath: {{ $key}}
-            {{- end }}
-          ports:
-            - name: http
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
+            - mountPath: "/tmp/secrets"
+              name: nats-nkey
+              readOnly: true
           livenessProbe:
             httpGet:
-              path: /health
-              port: http
+              path: /ping
+              port: 4195
             initialDelaySeconds: 70
             periodSeconds: 20
             successThreshold: 1
@@ -80,8 +77,8 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /health
-              port: http
+              path: /ready
+              port: 4195
             initialDelaySeconds: 0
             periodSeconds: 10
             successThreshold: 1

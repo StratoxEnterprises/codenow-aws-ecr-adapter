@@ -1,0 +1,78 @@
+input:
+  label: "component_created"
+  nats:
+    prefetch_count: 32
+    queue: codenow.aws.ecr.adapter
+    subject: ${NATS_COMPONENT_REGISTERED_IN:scm.*.component.created}
+    urls:
+      - nats://${NATS_SERVER_HOST:localhost}:${NATS_SERVER_PORT:4222}
+    auth:
+      nkey_file: ${NATS_AUTH_NKEY_FILE:/tmp/secrets/nats_nkey}
+    tls:
+      skip_cert_verify: ${NATS_TLS_SKIP_CERT_VERIFY:false}
+      enabled: ${NATS_TLS_ENABLED:false}
+
+pipeline:
+  processors:
+    - branch:
+        request_map: |-
+          meta account = this.tenantName
+        processors:
+          - log:
+              level: INFO
+              message: "SSP Account Config REST request"
+              fields:
+                params: '${! meta("account") }'
+          - http:
+              url: ${ACCOUNT_CONFIG_SERVICE_HOST}/account/${! meta("account") }/settings
+              verb: GET
+              timeout: 10s
+              retries: 3
+              successful_on:
+                - 200
+          - log:
+              level: INFO
+              message: "SSP Account Config REST response"
+              fields:
+                params: '${! meta() }'
+                content: '${! content() }'
+        result_map: |-
+          meta createEcrRepo = if this.containerRegistry.type == "ECR" && this.containerRegistry.repositoryManagement.enabled == true {  true } else { false }
+    - switch:
+        - check: meta("createEcrRepo") == "true"
+          processors:
+            - branch:
+                request_map: |-
+                  meta componentName = this.componentName
+                  meta account = this.tenantName
+                  root = {
+                    "name": this.componentName
+                  }
+                processors:
+                  - log:
+                      level: INFO
+                      message: "Inventory Provisioner REST request"
+                  - http:
+                      url: ${INVENTORY_PROVISIONER_SERVICE_HOST}/inventory/${! meta("account") }/container-repository-registry
+                      verb: POST
+                      timeout: 30s
+                      retries: 3
+                      successful_on:
+                        - 200
+                  - terraform:
+                      path: "/tmp/terraform"
+                  - catch:
+                      - mapping: |
+                          root.status = "NOK"
+                result_map: |-
+                  root = {}
+                  root.name = meta("componentName")
+                  root.type = "aws"
+                  root.status = if this.status == null { "OK" } else { this.status }
+output:
+  nats:
+    urls:
+      - nats://${NATS_SERVER_HOST:localhost}:${NATS_SERVER_PORT:4222}
+    subject: ${NATS_ECR_CREATED_OUT:ecr.created}
+    auth:
+      nkey_file: ${NATS_AUTH_NKEY_FILE:/tmp/secrets/nats_nkey}
