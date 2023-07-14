@@ -23,11 +23,9 @@ spec:
       labels:
         app: {{ .Values.codenow.componentRuntimeName }}
         app.kubernetes.io/name: {{ .Values.codenow.componentRuntimeName }}
-        app.kubernetes.io/instance: {{ .Values.codenow.instance }}
         app.kubernetes.io/version: {{ .Values.codenow.componentVersion }}
-        app.kubernetes.io/component: {{ .Values.codenow.templateId }}
         app.kubernetes.io/part-of: {{ .Values.codenow.applicationRuntimeName }}
-        app.kubernetes.io/package-version: {{ .Values.codenow.applicationVersion }}
+        app.kubernetes.io/package-version: {{ .Chart.Version }}
     spec:
       imagePullSecrets:
         - name: docker-user-registry

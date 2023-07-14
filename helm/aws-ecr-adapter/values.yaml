@@ -4,16 +4,11 @@
 replicaCount: 1
 configHash: "1" # configuration change detection
 codenow:
-  instance: ""
   applicationName: "code-now-container-registry"
   applicationRuntimeName: "code-now-container-registry"
-  applicationVersion: ""
   componentRuntimeName: "aws-ecr-adapter"
   componentName: "aws-ecr-adapter"
   componentVersion: ${project.version}
-  templateId: ""
-  domainName: "stxcn.codenow.com"
-  environmentId: ""
 
 environmentVariables: {}
 
