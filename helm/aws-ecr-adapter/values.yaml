@@ -21,7 +21,7 @@ buildNumber: "${env.BUILD_NUMBER}"
 
 image:
   repository: codenow-stxcn-docker.jfrog.io/codenow/aws-ecr-adapter
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
 
 
 configFiles: {}
@@ -46,14 +46,14 @@ affinity: {}
 nats:
   serverHost: "cn-nats.cn-nats-system"
   skipCertVerify: true
-  nkey: ""
+  nkey: "U1VBR0tGWldCUjJNR1g3RlJOT1E1WEdISE1MM1RFTFVGS1MzQ0xSQk5CN0pPVTNNUEc2SVlRU0c1NApVQ0pPTVhMWDZKQ0Y3NEI2Qks1UUpLM1dPTUM2R0s2VlVURkZHRk5VTlQzM1pRTDZXTUEyQjNYNw=="
 s3:
   host:  "https://s3.eu-central-1.wasabisys.com"
-  accessKeyId: ""
-  secretAccessKey: ""
+  accessKeyId: "NE44NFozNlFGU1M0RlBDT1lYTTc="
+  secretAccessKey: "WWpBMGdTc1A4RXJZQWVldGc5c0plSmFlVWJZV0xNMTlkemV0dVZERA=="
 
-inventoryProvisionerServiceHost: "http://inventory-provisioner.dev:8080"
-accountConfigServiceHost: "http://account.dev"
+inventoryProvisionerServiceHost: "http://inventory-provisioner.ssp:8080"
+accountConfigServiceHost: "http://account.ssp"
 
 
 

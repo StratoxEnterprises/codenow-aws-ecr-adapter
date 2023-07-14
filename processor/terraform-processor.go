@@ -113,9 +113,13 @@ func (tfp *TerraformProcessor) Process(ctx context.Context, m *service.Message) 
 		tfp.logger.Error("error terraform output.")
 		return nil, err
 	}
-	outBytes, _ := out["container_registry_repositories"].Value.MarshalJSON()
-	m.SetBytes(outBytes)
-	tfp.logger.Infof("Terraform output repositories: %s", string(outBytes))
+	outReposBytes, _ := out["container_registry_repositories"].Value.MarshalJSON()
+	m.SetBytes(outReposBytes)
+	tfp.logger.Infof("Terraform output registry repositories: %s", string(outReposBytes))
+	outUserNameBytes, _ := out["container_registry_user_writer_username"].Value.MarshalJSON()
+	tfp.logger.Infof("Terraform output registry writer username: %s", string(outUserNameBytes))
+	outUserPasswordBytes, _ := out["container_registry_user_writer_password"].Value.MarshalJSON()
+	tfp.logger.Infof("Terraform output registry writer password: %s", string(outUserPasswordBytes))
 
 	return []*service.Message{m}, nil
 }
